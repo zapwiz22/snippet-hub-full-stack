@@ -16,7 +16,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://snippet-hub-full-stack.vercel.app/",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend url
+    origin: "https://snippet-hub-full-stack.vercel.app/", // frontend url
     credentials: true, // to allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],

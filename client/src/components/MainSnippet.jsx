@@ -134,7 +134,7 @@ const MainSnippet = () => {
 
   const copyLink = () => {
     // Use the correct API endpoint path
-    const publicLink = `http://localhost:5173/public/${authData.userId}/${id}`;
+    const publicLink = `https://snippet-hub-full-stack.vercel.app//public/${authData.userId}/${id}`;
     navigator.clipboard.writeText(publicLink).then(() => {
       alert("Public link copied to clipboard!");
     });
