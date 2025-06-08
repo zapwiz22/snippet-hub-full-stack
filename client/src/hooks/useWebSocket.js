@@ -33,7 +33,6 @@ export const useWebSocket = (
 
     socket.on("connect", () => {
       console.log("WebSocket connected for collection:", collectionId);
-      // Rejoin collection room after reconnection
       socket.emit("join-collection", collectionId);
     });
 
@@ -55,7 +54,6 @@ export const useWebSocket = (
         attemptNumber,
         "attempts"
       );
-      // Rejoin collection room after reconnection
       socket.emit("join-collection", collectionId);
     });
 
@@ -70,7 +68,6 @@ export const useWebSocket = (
       console.log("Received pong from server");
     });
 
-    // Join the collection room
     socket.emit("join-collection", collectionId);
 
     // Set up event listeners

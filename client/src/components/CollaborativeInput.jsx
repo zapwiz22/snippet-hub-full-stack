@@ -26,10 +26,8 @@ const CollaborativeInput = ({
     }
   }, [value]);
 
-  // Simplified remote changes handling - just replace the whole content
   useEffect(() => {
     if (remoteChanges && remoteChanges.field === field) {
-      // Skip duplicate changes
       if (
         lastRemoteChange.current &&
         lastRemoteChange.current.timestamp === remoteChanges.timestamp
@@ -37,7 +35,6 @@ const CollaborativeInput = ({
         return;
       }
 
-      // Skip if user recently typed (avoid conflicts)
       if (ignoreNextRemoteChange.current) {
         ignoreNextRemoteChange.current = false;
         return;
@@ -45,7 +42,6 @@ const CollaborativeInput = ({
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
       if (timeSinceUserInput < 500) {
-        // Increased from 200 for better stability
         console.log(
           "Skipping remote change due to recent user input:",
           timeSinceUserInput
@@ -55,15 +51,12 @@ const CollaborativeInput = ({
 
       lastRemoteChange.current = remoteChanges;
 
-      // Only apply if the value is actually different
       if (remoteChanges.value !== localValue) {
         isUpdatingFromRemote.current = true;
 
-        // Simply replace the entire content - much simpler!
         setLocalValue(remoteChanges.value);
         onChange(remoteChanges.value);
 
-        // Reset the update flag immediately
         isUpdatingFromRemote.current = false;
       }
     }
@@ -73,7 +66,6 @@ const CollaborativeInput = ({
     if (isUpdatingFromRemote.current) return;
     lastUserInput.current = Date.now();
 
-    // Mark that we should ignore the next remote change to avoid echo
     ignoreNextRemoteChange.current = true;
 
     const newValue = e.target.value;

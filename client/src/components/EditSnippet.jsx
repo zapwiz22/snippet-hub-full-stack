@@ -6,7 +6,6 @@ import { saveFile, getFile } from "../utils/fileStorage";
 import { useCollaborativeEdit } from "../hooks/useCollaborativeEdit.js";
 import CollaborativeInput from "./CollaborativeInput";
 import CollaborativeTextarea from "./CollaborativeTextarea";
-import ConnectionMonitor from "./ConnectionMonitor";
 
 const EditSnippet = () => {
   const { id } = useParams();
@@ -555,11 +554,6 @@ const EditSnippet = () => {
           Save
         </button>
       </div>
-
-      {/* Connection Monitor for debugging - can be removed in production */}
-      {process.env.NODE_ENV === "development" && (
-        <ConnectionMonitor socket={socket} type="collaborative" />
-      )}
     </div>
   );
 };
