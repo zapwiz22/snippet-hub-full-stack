@@ -1,4 +1,4 @@
-# 📌 Snippet-Hub
+# 📌 [Snippet-Hub](https://snippet-hub-full-stack.vercel.app/)
 
 **Snippet-Hub** is your personal and collaborative code snippet organizer. Store, manage, and share all your snippets in one intuitive platform — whether it's code, links, notes, or even files (client-side only). Great for individuals and teams alike!
 
@@ -53,6 +53,21 @@ We're just getting started! Here are some of the improvements on the roadmap:
 - 🔐 **OAuth Authorization** – support sign-ins with Google, GitHub, etc.
 - 🌓 **Theme Support** – add **Light** and **Dark** modes.
 - 🔍 **Full-text Search** – find what you need faster.
+
+---
+## 🧑‍💻 Contributing / Development Setup
+Want to contribute? Awesome! Follow these steps to set up Snippet-Hub locally.
+1. Clone the repository
+2. Install the dependencies (npm install)
+3. Setup the environment-variables
+```
+PORT=3000
+MONGO_DB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+NODE_ENV=development
+```
+4. Run the dev server
+
 
 ---
 
