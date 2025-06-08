@@ -13,19 +13,32 @@ export const useWebSocket = (
   useEffect(() => {
     if (!collectionId) return;
 
-    // Initialize socket connection
+    // Initialize socket connection with enhanced configuration
     socketRef.current = io("https://snippet-hub-full-stack.onrender.com", {
       withCredentials: true,
+      // Enhanced connection configuration for stability
+      forceNew: false,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      timeout: 20000,
+      // Transport configuration for better connectivity
+      transports: ["websocket", "polling"],
+      upgrade: true,
+      autoConnect: true,
     });
 
     const socket = socketRef.current;
 
     socket.on("connect", () => {
       console.log("WebSocket connected for collection:", collectionId);
+      // Rejoin collection room after reconnection
+      socket.emit("join-collection", collectionId);
     });
 
-    socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
+    socket.on("disconnect", (reason) => {
+      console.log("WebSocket disconnected:", reason);
     });
 
     socket.on("connect_error", (error) => {
@@ -34,6 +47,27 @@ export const useWebSocket = (
 
     socket.on("error", (error) => {
       console.error("WebSocket error:", error);
+    });
+
+    socket.on("reconnect", (attemptNumber) => {
+      console.log(
+        "WebSocket reconnected for collection after",
+        attemptNumber,
+        "attempts"
+      );
+      // Rejoin collection room after reconnection
+      socket.emit("join-collection", collectionId);
+    });
+
+    // Add heartbeat mechanism
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit("ping");
+      }
+    }, 25000); // Send ping every 25 seconds
+
+    socket.on("pong", () => {
+      console.log("Received pong from server");
     });
 
     // Join the collection room
@@ -70,6 +104,9 @@ export const useWebSocket = (
 
     // Cleanup on unmount
     return () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
       socket.emit("leave-collection", collectionId);
       socket.disconnect();
     };

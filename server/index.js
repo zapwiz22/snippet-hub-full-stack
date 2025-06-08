@@ -20,6 +20,20 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
+  // Enhanced connection settings
+  pingTimeout: 60000, // 60 seconds
+  pingInterval: 25000, // 25 seconds
+  upgradeTimeout: 30000, // 30 seconds
+  allowEIO3: true,
+  transports: ["websocket", "polling"],
+  allowUpgrades: true,
+  cookie: false,
+  serveClient: false,
+  // Connection state recovery
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
+    skipMiddlewares: true,
+  },
 });
 
 const PORT = process.env.PORT || 3000;
@@ -44,6 +58,30 @@ app.use("/api/snippet", snippetRoutes);
 app.use("/api/collection", collectionRoutes);
 
 const activeEditingSessions = new Map();
+
+// Cleanup function for stale sessions
+const cleanupStaleSessions = () => {
+  const now = Date.now();
+  const STALE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
+  for (const [snippetId, users] of activeEditingSessions.entries()) {
+    for (const [userId, userInfo] of users.entries()) {
+      if (now - new Date(userInfo.joinedAt).getTime() > STALE_THRESHOLD) {
+        console.log(
+          `Cleaning up stale session for user ${userId} in snippet ${snippetId}`
+        );
+        users.delete(userId);
+      }
+    }
+
+    if (users.size === 0) {
+      activeEditingSessions.delete(snippetId);
+    }
+  }
+};
+
+// Run cleanup every 2 minutes
+setInterval(cleanupStaleSessions, 2 * 60 * 1000);
 
 // web socket connection building and stuff
 io.on("connection", (socket) => {
@@ -198,8 +236,8 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+  socket.on("disconnect", (reason) => {
+    console.log("User disconnected:", socket.id, "Reason:", reason);
 
     if (socket.userId && socket.snippetId) {
       const snippetId = socket.snippetId;
@@ -215,6 +253,24 @@ io.on("connection", (socket) => {
 
       socket.to(roomName).emit("user-left-edit", { userId });
     }
+
+    // Clean up any collection rooms the socket was in
+    const rooms = Array.from(socket.rooms);
+    rooms.forEach((room) => {
+      if (room.startsWith("collection-")) {
+        socket.to(room).emit("user-disconnected", { socketId: socket.id });
+      }
+    });
+  });
+
+  // Add heartbeat mechanism
+  socket.on("ping", () => {
+    socket.emit("pong");
+  });
+
+  // Handle connection errors
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
   });
 });
 

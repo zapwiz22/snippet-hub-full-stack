@@ -48,7 +48,8 @@ const CollaborativeTextarea = ({
       }
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
-      if (timeSinceUserInput < 150) {
+      if (timeSinceUserInput < 50) {
+        // Reduced from 150 for faster updates
         console.log(
           "Skipping remote textarea change due to recent user input:",
           timeSinceUserInput
@@ -109,39 +110,38 @@ const CollaborativeTextarea = ({
           Math.min(adjustedCursor, remoteChanges.value.length)
         );
 
-        // Apply update with very short delay for faster response
-        updateTimeoutRef.current = setTimeout(() => {
-          setLocalValue(remoteChanges.value);
-          onChange(remoteChanges.value);
+        // Apply update immediately without delay for better real-time feel
+        setLocalValue(remoteChanges.value);
+        onChange(remoteChanges.value);
 
-          requestAnimationFrame(() => {
-            if (textarea && isUpdatingFromRemote.current) {
-              try {
-                if (currentSelection > 0) {
-                  const adjustedSelectionEnd = Math.min(
-                    adjustedCursor + currentSelection,
-                    remoteChanges.value.length
-                  );
-                  textarea.setSelectionRange(
-                    adjustedCursor,
-                    adjustedSelectionEnd
-                  );
-                } else {
-                  textarea.setSelectionRange(adjustedCursor, adjustedCursor);
-                }
-                setCursorPosition(adjustedCursor);
-              } catch (e) {
-                const safePosition = Math.min(
-                  adjustedCursor,
+        // Immediate cursor adjustment
+        requestAnimationFrame(() => {
+          if (textarea && isUpdatingFromRemote.current) {
+            try {
+              if (currentSelection > 0) {
+                const adjustedSelectionEnd = Math.min(
+                  adjustedCursor + currentSelection,
                   remoteChanges.value.length
                 );
-                textarea.setSelectionRange(safePosition, safePosition);
-                setCursorPosition(safePosition);
+                textarea.setSelectionRange(
+                  adjustedCursor,
+                  adjustedSelectionEnd
+                );
+              } else {
+                textarea.setSelectionRange(adjustedCursor, adjustedCursor);
               }
+              setCursorPosition(adjustedCursor);
+            } catch (e) {
+              const safePosition = Math.min(
+                adjustedCursor,
+                remoteChanges.value.length
+              );
+              textarea.setSelectionRange(safePosition, safePosition);
+              setCursorPosition(safePosition);
             }
-            isUpdatingFromRemote.current = false;
-          });
-        }, 2); 
+          }
+          isUpdatingFromRemote.current = false;
+        });
       } else {
         isUpdatingFromRemote.current = false;
       }
@@ -149,7 +149,7 @@ const CollaborativeTextarea = ({
   }, [remoteChanges, field, onChange, localValue]);
 
   const handleChange = (e) => {
-    if (isUpdatingFromRemote.current) return; 
+    if (isUpdatingFromRemote.current) return;
 
     lastUserInput.current = Date.now();
 

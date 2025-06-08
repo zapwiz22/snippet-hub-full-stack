@@ -90,8 +90,8 @@ export const createTextDebouncer = (callback, delay = 100) => {
 
 export const createChangeQueue = (processor, options = {}) => {
   const {
-    maxQueueSize = 15,
-    batchDelay = 20, // Even faster processing
+    maxQueueSize = 10, // Reduced queue size for faster processing
+    batchDelay = 5, // Immediate processing
     deduplicationKey = (item) => `${item.field}-${item.timestamp}`,
   } = options;
 
@@ -104,20 +104,13 @@ export const createChangeQueue = (processor, options = {}) => {
 
     processing = true;
 
-    // More conservative deduplication - only dedupe if values are identical and very close in time
+    // Simplified deduplication - only keep the latest change per field
     const deduped = queue.reduce((acc, item) => {
       const key = item.field;
       const existing = acc[key];
 
-      // Only deduplicate if:
-      // 1. Same field
-      // 2. Same value
-      // 3. Within 25ms (very short window)
-      if (
-        !existing ||
-        item.value !== existing.value ||
-        item.timestamp - existing.timestamp > 25
-      ) {
+      // Only keep the latest change per field
+      if (!existing || item.timestamp > existing.timestamp) {
         acc[key] = item;
       }
       return acc;
@@ -126,7 +119,7 @@ export const createChangeQueue = (processor, options = {}) => {
     const toProcess = Object.values(deduped);
     queue = [];
 
-    // Process items with minimal delay
+    // Process items immediately
     toProcess.forEach((item, index) => {
       setTimeout(() => {
         processor(item);
@@ -134,10 +127,10 @@ export const createChangeQueue = (processor, options = {}) => {
           processing = false;
           // Check for more items immediately
           if (queue.length > 0) {
-            setTimeout(processQueue, batchDelay);
+            processQueue();
           }
         }
-      }, index * 5); // Very short delay between processing items
+      }, index * 2); // Minimal delay between processing items
     });
   };
 

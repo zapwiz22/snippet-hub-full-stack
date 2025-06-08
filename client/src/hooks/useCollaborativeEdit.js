@@ -34,12 +34,11 @@ export const useCollaborativeEdit = (
         const remoteTime = change.timestamp || Date.now();
         const timeSinceLocal = Date.now() - lastLocalTime;
 
-        // More conservative application logic - be more cautious during active typing
+        // Simplified logic - be more aggressive with updates for better real-time feel
         const shouldApply =
-          remoteTime > lastLocalTime - 50 && // Narrow window for conflicting changes
           change.userId !== userId && // Never apply our own changes
           change.value !== undefined && // Ensure we have a valid value
-          timeSinceLocal > 100; // Wait a bit after local changes before applying remote ones
+          timeSinceLocal > 50; // Very short wait after local changes
 
         if (shouldApply) {
           console.log("Applying remote change:", {
@@ -51,23 +50,14 @@ export const useCollaborativeEdit = (
 
           setRemoteChanges(change);
 
-          // Show syncing indicator with context awareness
-          const shouldShowSyncing =
-            !context.isCollectionContext || !isLocallyEditing;
-          if (shouldShowSyncing) {
-            setIsSyncing(true);
-
-            // Clear previous syncing timeout
-            if (syncingTimeoutRef.current) {
-              clearTimeout(syncingTimeoutRef.current);
-            }
-
-            // Much shorter syncing display duration
-            const syncingDuration = context.isCollectionContext ? 100 : 120;
-            syncingTimeoutRef.current = setTimeout(() => {
-              setIsSyncing(false);
-            }, syncingDuration);
+          // Minimal syncing indicator
+          setIsSyncing(true);
+          if (syncingTimeoutRef.current) {
+            clearTimeout(syncingTimeoutRef.current);
           }
+          syncingTimeoutRef.current = setTimeout(() => {
+            setIsSyncing(false);
+          }, 50); // Very short syncing indicator
         } else {
           console.log("Skipping remote change due to recent local activity:", {
             field: change.field,
@@ -77,14 +67,25 @@ export const useCollaborativeEdit = (
         }
       },
       {
-        maxQueueSize: 25, // Larger queue size for busy scenarios
-        batchDelay: 15, // Very fast processing
+        maxQueueSize: 15, // Smaller queue for faster processing
+        batchDelay: 5, // Immediate processing
       }
     );
 
-    // Initialize socket connection
+    // Initialize socket connection with enhanced configuration
     socketRef.current = io("https://snippet-hub-full-stack.onrender.com", {
       withCredentials: true,
+      // Enhanced connection configuration for stability
+      forceNew: false,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      timeout: 20000,
+      // Transport configuration for better connectivity
+      transports: ["websocket", "polling"],
+      upgrade: true,
+      autoConnect: true,
     });
 
     const socket = socketRef.current;
@@ -92,10 +93,13 @@ export const useCollaborativeEdit = (
     socket.on("connect", () => {
       console.log("WebSocket connected for collaborative editing");
       setIsConnected(true);
+
+      // Rejoin the snippet editing room after reconnection
+      socket.emit("join-snippet-edit", { snippetId, userId });
     });
 
-    socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
+    socket.on("disconnect", (reason) => {
+      console.log("WebSocket disconnected:", reason);
       setIsConnected(false);
       setActiveUsers([]);
     });
@@ -105,8 +109,30 @@ export const useCollaborativeEdit = (
       setIsConnected(false);
     });
 
+    socket.on("reconnect", (attemptNumber) => {
+      console.log("WebSocket reconnected after", attemptNumber, "attempts");
+      setIsConnected(true);
+      // Rejoin the snippet editing room after reconnection
+      socket.emit("join-snippet-edit", { snippetId, userId });
+    });
+
+    socket.on("reconnect_error", (error) => {
+      console.error("WebSocket reconnection error:", error);
+    });
+
     // Join the snippet editing room
     socket.emit("join-snippet-edit", { snippetId, userId });
+
+    // Add heartbeat mechanism for collaborative editing
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit("ping");
+      }
+    }, 25000); // Send ping every 25 seconds
+
+    socket.on("pong", () => {
+      console.log("Received collaborative editing pong from server");
+    });
 
     // Listen for other users joining/leaving
     socket.on("user-joined-edit", (data) => {
@@ -165,6 +191,9 @@ export const useCollaborativeEdit = (
 
     // Cleanup on unmount
     return () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
       socket.emit("leave-snippet-edit", { snippetId, userId });
       socket.disconnect();
 
@@ -177,7 +206,7 @@ export const useCollaborativeEdit = (
     };
   }, [snippetId, userId, isLocallyEditing, context.isCollectionContext]);
 
-  // Enhanced content change sending with improved debouncing
+  // Simplified content change sending with minimal debouncing
   const sendContentChange = useCallback(
     (field, value, cursorPosition = null) => {
       if (!socketRef.current || !isConnected) return;
@@ -195,7 +224,7 @@ export const useCollaborativeEdit = (
       }
 
       // Shorter local editing timeout for faster sync
-      const timeoutDuration = context.isCollectionContext ? 300 : 250;
+      const timeoutDuration = 200; // Reduced from 300/250
       localEditTimeoutRef.current = setTimeout(() => {
         setIsLocallyEditing(false);
       }, timeoutDuration);
@@ -205,8 +234,8 @@ export const useCollaborativeEdit = (
         clearTimeout(debounceRef.current);
       }
 
-      // Much shorter debouncing for smoother real-time updates
-      const debounceDuration = context.isCollectionContext ? 75 : 50;
+      // Minimal debouncing for immediate updates
+      const debounceDuration = 30; // Reduced from 75/50
       debounceRef.current = setTimeout(() => {
         if (socketRef.current && socketRef.current.connected) {
           console.log("Sending content change:", {
@@ -270,5 +299,6 @@ export const useCollaborativeEdit = (
     sendContentChange,
     sendCursorPosition,
     sendSave,
+    socket: socketRef.current, // Expose socket for debugging
   };
 };
