@@ -1,8 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  calculateCursorAdjustment,
-  isSignificantChange,
-} from "../utils/textDiff";
 
 const CollaborativeInput = ({
   value,
@@ -20,7 +16,6 @@ const CollaborativeInput = ({
   const [localValue, setLocalValue] = useState(value);
   const isUpdatingFromRemote = useRef(false);
   const lastRemoteChange = useRef(null);
-  const updateTimeoutRef = useRef(null);
   const lastUserInput = useRef(Date.now());
   const ignoreNextRemoteChange = useRef(false);
 
@@ -31,9 +26,10 @@ const CollaborativeInput = ({
     }
   }, [value]);
 
-  // Enhanced remote changes handling with stable updates
+  // Simplified remote changes handling - just replace the whole content
   useEffect(() => {
     if (remoteChanges && remoteChanges.field === field) {
+      // Skip duplicate changes
       if (
         lastRemoteChange.current &&
         lastRemoteChange.current.timestamp === remoteChanges.timestamp
@@ -41,13 +37,14 @@ const CollaborativeInput = ({
         return;
       }
 
+      // Skip if user recently typed (avoid conflicts)
       if (ignoreNextRemoteChange.current) {
         ignoreNextRemoteChange.current = false;
         return;
       }
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
-      if (timeSinceUserInput < 150) {
+      if (timeSinceUserInput < 200) {
         console.log(
           "Skipping remote change due to recent user input:",
           timeSinceUserInput
@@ -61,71 +58,21 @@ const CollaborativeInput = ({
       if (remoteChanges.value !== localValue) {
         isUpdatingFromRemote.current = true;
 
-        const input = inputRef.current;
-        const shouldPreserveCursor = input && document.activeElement === input;
-        const currentCursor = shouldPreserveCursor ? input.selectionStart : 0;
-        const currentSelection = shouldPreserveCursor
-          ? input.selectionEnd - input.selectionStart
-          : 0;
-
-        // Clear any pending update to prevent conflicts
-        if (updateTimeoutRef.current) {
-          clearTimeout(updateTimeoutRef.current);
-        }
-
-        // Calculate cursor adjustment before applying changes
-        const adjustedCursor = shouldPreserveCursor
-          ? calculateCursorAdjustment(
-              localValue,
-              remoteChanges.value,
-              currentCursor
-            )
-          : 0;
-
-        // Apply changes immediately but restore cursor after DOM update
+        // Simply replace the entire content - much simpler!
         setLocalValue(remoteChanges.value);
         onChange(remoteChanges.value);
 
-        // Only restore cursor if input is focused and we need to preserve position
-        if (shouldPreserveCursor) {
-          // Use a single requestAnimationFrame for cursor restoration
-          requestAnimationFrame(() => {
-            if (
-              input &&
-              document.activeElement === input &&
-              isUpdatingFromRemote.current
-            ) {
-              try {
-                const safePosition = Math.max(
-                  0,
-                  Math.min(adjustedCursor, remoteChanges.value.length)
-                );
-                if (currentSelection > 0) {
-                  const adjustedSelectionEnd = Math.min(
-                    safePosition + currentSelection,
-                    remoteChanges.value.length
-                  );
-                  input.setSelectionRange(safePosition, adjustedSelectionEnd);
-                } else {
-                  input.setSelectionRange(safePosition, safePosition);
-                }
-              } catch (e) {
-                console.log("Error: ",e);
-              }
-            }
-            isUpdatingFromRemote.current = false;
-          });
-        } else {
-          isUpdatingFromRemote.current = false;
-        }
+        // Reset the update flag immediately
+        isUpdatingFromRemote.current = false;
       }
     }
   }, [remoteChanges, field, onChange, localValue]);
 
   const handleChange = (e) => {
-    if (isUpdatingFromRemote.current) return; 
+    if (isUpdatingFromRemote.current) return;
     lastUserInput.current = Date.now();
 
+    // Mark that we should ignore the next remote change to avoid echo
     ignoreNextRemoteChange.current = true;
 
     const newValue = e.target.value;
@@ -133,20 +80,10 @@ const CollaborativeInput = ({
     onChange(newValue);
   };
 
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const handleCursorChange = () => {
-    if (inputRef.current) {
+    if (inputRef.current && onCursorChange) {
       const position = inputRef.current.selectionStart;
-      if (onCursorChange) {
-        onCursorChange(field, position);
-      }
+      onCursorChange(field, position);
     }
   };
 

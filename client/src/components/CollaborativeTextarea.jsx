@@ -1,8 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  calculateCursorAdjustment,
-  isSignificantChange,
-} from "../utils/textDiff";
 
 const CollaborativeTextarea = ({
   value,
@@ -21,7 +17,6 @@ const CollaborativeTextarea = ({
   const [cursorPosition, setCursorPosition] = useState(0);
   const isUpdatingFromRemote = useRef(false);
   const lastRemoteChange = useRef(null);
-  const updateTimeoutRef = useRef(null);
   const lastUserInput = useRef(Date.now());
   const ignoreNextRemoteChange = useRef(false);
 
@@ -32,9 +27,10 @@ const CollaborativeTextarea = ({
     }
   }, [value]);
 
-  // Enhanced remote changes handling with differential updates
+  // Simplified remote changes handling - just replace the whole content
   useEffect(() => {
     if (remoteChanges && remoteChanges.field === field) {
+      // Skip duplicate changes
       if (
         lastRemoteChange.current &&
         lastRemoteChange.current.timestamp === remoteChanges.timestamp
@@ -42,14 +38,14 @@ const CollaborativeTextarea = ({
         return;
       }
 
+      // Skip if user recently typed (avoid conflicts)
       if (ignoreNextRemoteChange.current) {
         ignoreNextRemoteChange.current = false;
         return;
       }
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
-      if (timeSinceUserInput < 50) {
-        // Reduced from 150 for faster updates
+      if (timeSinceUserInput < 200) {
         console.log(
           "Skipping remote textarea change due to recent user input:",
           timeSinceUserInput
@@ -58,91 +54,16 @@ const CollaborativeTextarea = ({
       }
 
       lastRemoteChange.current = remoteChanges;
-      isUpdatingFromRemote.current = true;
 
-      const textarea = textareaRef.current;
-      const currentCursor = textarea ? textarea.selectionStart : 0;
-      const currentSelection = textarea
-        ? textarea.selectionEnd - textarea.selectionStart
-        : 0;
-
-      // Clear any pending update
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-
+      // Only apply if the value is actually different
       if (remoteChanges.value !== localValue) {
-        let adjustedCursor = calculateCursorAdjustment(
-          localValue,
-          remoteChanges.value,
-          currentCursor
-        );
+        isUpdatingFromRemote.current = true;
 
-        const oldLines = localValue.substr(0, currentCursor).split("\n");
-        const oldLineNumber = oldLines.length - 1;
-        const oldColumnNumber = oldLines[oldLines.length - 1].length;
-
-        const newLines = remoteChanges.value.split("\n");
-
-        if (newLines.length > oldLineNumber) {
-          const targetLine = Math.min(oldLineNumber, newLines.length - 1);
-          const targetColumn = Math.min(
-            oldColumnNumber,
-            newLines[targetLine].length
-          );
-
-          const lineBasedCursor =
-            newLines.slice(0, targetLine).join("\n").length +
-            (targetLine > 0 ? 1 : 0) +
-            targetColumn;
-
-          // Use the better of the two positioning methods
-          const cursorDiffFromCalc = Math.abs(adjustedCursor - currentCursor);
-          const cursorDiffFromLine = Math.abs(lineBasedCursor - currentCursor);
-
-          if (cursorDiffFromLine < cursorDiffFromCalc) {
-            adjustedCursor = lineBasedCursor;
-          }
-        }
-
-        adjustedCursor = Math.max(
-          0,
-          Math.min(adjustedCursor, remoteChanges.value.length)
-        );
-
-        // Apply update immediately without delay for better real-time feel
+        // Simply replace the entire content - much simpler!
         setLocalValue(remoteChanges.value);
         onChange(remoteChanges.value);
 
-        // Immediate cursor adjustment
-        requestAnimationFrame(() => {
-          if (textarea && isUpdatingFromRemote.current) {
-            try {
-              if (currentSelection > 0) {
-                const adjustedSelectionEnd = Math.min(
-                  adjustedCursor + currentSelection,
-                  remoteChanges.value.length
-                );
-                textarea.setSelectionRange(
-                  adjustedCursor,
-                  adjustedSelectionEnd
-                );
-              } else {
-                textarea.setSelectionRange(adjustedCursor, adjustedCursor);
-              }
-              setCursorPosition(adjustedCursor);
-            } catch (e) {
-              const safePosition = Math.min(
-                adjustedCursor,
-                remoteChanges.value.length
-              );
-              textarea.setSelectionRange(safePosition, safePosition);
-              setCursorPosition(safePosition);
-            }
-          }
-          isUpdatingFromRemote.current = false;
-        });
-      } else {
+        // Reset the update flag immediately
         isUpdatingFromRemote.current = false;
       }
     }
@@ -153,20 +74,13 @@ const CollaborativeTextarea = ({
 
     lastUserInput.current = Date.now();
 
+    // Mark that we should ignore the next remote change to avoid echo
     ignoreNextRemoteChange.current = true;
 
     const newValue = e.target.value;
     setLocalValue(newValue);
     onChange(newValue);
   };
-
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleCursorChange = () => {
     if (textareaRef.current) {

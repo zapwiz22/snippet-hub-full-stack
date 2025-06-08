@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { io } from "socket.io-client";
-import { createChangeQueue } from "../utils/textDiff";
 
 export const useCollaborativeEdit = (
   snippetId,
@@ -15,74 +14,24 @@ export const useCollaborativeEdit = (
   const [isSyncing, setIsSyncing] = useState(false);
   const [isLocallyEditing, setIsLocallyEditing] = useState(false);
 
-  // Enhanced debounce and timing references
+  // Simplified debounce and timing references
   const debounceRef = useRef(null);
   const localEditTimeoutRef = useRef(null);
   const syncingTimeoutRef = useRef(null);
   const lastLocalChangeRef = useRef(null);
-  const pendingChangesQueue = useRef([]);
-  const processingRemoteChange = useRef(false);
-  const changeQueueRef = useRef(null);
 
   useEffect(() => {
     if (!snippetId || !userId) return;
 
-    // Initialize change queue for better handling of rapid changes
-    changeQueueRef.current = createChangeQueue(
-      (change) => {
-        const lastLocalTime = lastLocalChangeRef.current || 0;
-        const remoteTime = change.timestamp || Date.now();
-        const timeSinceLocal = Date.now() - lastLocalTime;
-
-        // Simplified logic - be more aggressive with updates for better real-time feel
-        const shouldApply =
-          change.userId !== userId && // Never apply our own changes
-          change.value !== undefined && // Ensure we have a valid value
-          timeSinceLocal > 50; // Very short wait after local changes
-
-        if (shouldApply) {
-          console.log("Applying remote change:", {
-            field: change.field,
-            valueLength: change.value ? change.value.length : 0,
-            timestamp: change.timestamp,
-            timeSinceLocal,
-          });
-
-          setRemoteChanges(change);
-
-          // Minimal syncing indicator
-          setIsSyncing(true);
-          if (syncingTimeoutRef.current) {
-            clearTimeout(syncingTimeoutRef.current);
-          }
-          syncingTimeoutRef.current = setTimeout(() => {
-            setIsSyncing(false);
-          }, 50); // Very short syncing indicator
-        } else {
-          console.log("Skipping remote change due to recent local activity:", {
-            field: change.field,
-            timeSinceLocal,
-            isLocalEditing: isLocallyEditing,
-          });
-        }
-      },
-      {
-        maxQueueSize: 15, // Smaller queue for faster processing
-        batchDelay: 5, // Immediate processing
-      }
-    );
-
     // Initialize socket connection with enhanced configuration
     socketRef.current = io("https://snippet-hub-full-stack.onrender.com", {
       withCredentials: true,
-      // Enhanced connection configuration for stability
       forceNew: false,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
       timeout: 20000,
-      // Transport configuration for better connectivity
       transports: ["websocket", "polling"],
       upgrade: true,
       autoConnect: true,
@@ -156,7 +105,7 @@ export const useCollaborativeEdit = (
       setActiveUsers(users.filter((user) => user.userId !== userId));
     });
 
-    // Listen for real-time content changes with improved handling
+    // Listen for real-time content changes - simplified handling
     socket.on("snippet-content-changed", (data) => {
       if (data.userId !== userId) {
         console.log("Received remote change:", {
@@ -166,12 +115,24 @@ export const useCollaborativeEdit = (
           userId: data.userId,
         });
 
-        // Use change queue for better handling
-        if (changeQueueRef.current) {
-          changeQueueRef.current.add({
-            ...data,
-            receivedAt: Date.now(),
-          });
+        // Simple approach: directly apply remote changes
+        const lastLocalTime = lastLocalChangeRef.current || 0;
+        const timeSinceLocal = Date.now() - lastLocalTime;
+
+        // Only apply if it's not our own change and enough time has passed
+        if (timeSinceLocal > 100) {
+          setRemoteChanges(data);
+
+          // Brief syncing indicator
+          setIsSyncing(true);
+          if (syncingTimeoutRef.current) {
+            clearTimeout(syncingTimeoutRef.current);
+          }
+          syncingTimeoutRef.current = setTimeout(() => {
+            setIsSyncing(false);
+          }, 100);
+        } else {
+          console.log("Skipping remote change due to recent local activity");
         }
       }
     });
@@ -197,16 +158,15 @@ export const useCollaborativeEdit = (
       socket.emit("leave-snippet-edit", { snippetId, userId });
       socket.disconnect();
 
-      // Clear all timeouts and queues
+      // Clear all timeouts
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (localEditTimeoutRef.current)
         clearTimeout(localEditTimeoutRef.current);
       if (syncingTimeoutRef.current) clearTimeout(syncingTimeoutRef.current);
-      if (changeQueueRef.current) changeQueueRef.current.clear();
     };
   }, [snippetId, userId, isLocallyEditing, context.isCollectionContext]);
 
-  // Simplified content change sending with minimal debouncing
+  // Simplified content change sending
   const sendContentChange = useCallback(
     (field, value, cursorPosition = null) => {
       if (!socketRef.current || !isConnected) return;
@@ -224,7 +184,7 @@ export const useCollaborativeEdit = (
       }
 
       // Shorter local editing timeout for faster sync
-      const timeoutDuration = 200; // Reduced from 300/250
+      const timeoutDuration = 300;
       localEditTimeoutRef.current = setTimeout(() => {
         setIsLocallyEditing(false);
       }, timeoutDuration);
@@ -234,8 +194,8 @@ export const useCollaborativeEdit = (
         clearTimeout(debounceRef.current);
       }
 
-      // Minimal debouncing for immediate updates
-      const debounceDuration = 30; // Reduced from 75/50
+      // Minimal debouncing for smoother updates
+      const debounceDuration = 100;
       debounceRef.current = setTimeout(() => {
         if (socketRef.current && socketRef.current.connected) {
           console.log("Sending content change:", {
