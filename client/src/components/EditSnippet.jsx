@@ -61,13 +61,7 @@ const EditSnippet = () => {
   } = useCollaborativeEdit(
     id,
     authData.userId,
-    {
-      title,
-      description,
-      content,
-      contentType,
-      tags,
-    },
+    null, // Remove initialData dependency that causes re-renders
     {
       isCollectionContext,
     }

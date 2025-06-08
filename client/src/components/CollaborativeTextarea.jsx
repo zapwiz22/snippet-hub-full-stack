@@ -45,7 +45,8 @@ const CollaborativeTextarea = ({
       }
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
-      if (timeSinceUserInput < 200) {
+      if (timeSinceUserInput < 500) {
+        // Increased from 200 for better stability
         console.log(
           "Skipping remote textarea change due to recent user input:",
           timeSinceUserInput

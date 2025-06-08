@@ -44,7 +44,8 @@ const CollaborativeInput = ({
       }
 
       const timeSinceUserInput = Date.now() - lastUserInput.current;
-      if (timeSinceUserInput < 200) {
+      if (timeSinceUserInput < 500) {
+        // Increased from 200 for better stability
         console.log(
           "Skipping remote change due to recent user input:",
           timeSinceUserInput

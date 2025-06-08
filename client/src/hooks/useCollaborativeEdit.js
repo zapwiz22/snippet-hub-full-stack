@@ -23,18 +23,21 @@ export const useCollaborativeEdit = (
   useEffect(() => {
     if (!snippetId || !userId) return;
 
-    // Initialize socket connection with enhanced configuration
+    // Initialize socket connection with stable configuration
     socketRef.current = io("https://snippet-hub-full-stack.onrender.com", {
       withCredentials: true,
       forceNew: false,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
-      timeout: 20000,
+      reconnectionDelay: 2000, // Increased from 1000
+      reconnectionDelayMax: 10000, // Increased from 5000
+      reconnectionAttempts: 10, // Increased from 5
+      timeout: 30000, // Increased from 20000
       transports: ["websocket", "polling"],
       upgrade: true,
       autoConnect: true,
+      // Add ping/pong settings to keep connection alive
+      pingTimeout: 60000, // How long to wait for pong
+      pingInterval: 25000, // How often to ping
     });
 
     const socket = socketRef.current;
@@ -77,7 +80,7 @@ export const useCollaborativeEdit = (
       if (socket.connected) {
         socket.emit("ping");
       }
-    }, 25000); // Send ping every 25 seconds
+    }, 30000); // Increased from 25000 to reduce frequency
 
     socket.on("pong", () => {
       console.log("Received collaborative editing pong from server");
@@ -120,7 +123,8 @@ export const useCollaborativeEdit = (
         const timeSinceLocal = Date.now() - lastLocalTime;
 
         // Only apply if it's not our own change and enough time has passed
-        if (timeSinceLocal > 100) {
+        if (timeSinceLocal > 300) {
+          // Increased from 100 for better stability
           setRemoteChanges(data);
 
           // Brief syncing indicator
@@ -164,7 +168,7 @@ export const useCollaborativeEdit = (
         clearTimeout(localEditTimeoutRef.current);
       if (syncingTimeoutRef.current) clearTimeout(syncingTimeoutRef.current);
     };
-  }, [snippetId, userId, isLocallyEditing, context.isCollectionContext]);
+  }, [snippetId, userId]); // Only depend on stable values
 
   // Simplified content change sending
   const sendContentChange = useCallback(
@@ -195,7 +199,7 @@ export const useCollaborativeEdit = (
       }
 
       // Minimal debouncing for smoother updates
-      const debounceDuration = 100;
+      const debounceDuration = 300; // Increased from 100 to reduce frequency
       debounceRef.current = setTimeout(() => {
         if (socketRef.current && socketRef.current.connected) {
           console.log("Sending content change:", {
