@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Custom animations for collaborative editing */
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.collaborative-cursor {
+  animation: blink 1s infinite;
+}
+
+/* Smooth transitions for real-time updates */
+.collaborative-field {
+  transition: border-color 0.2s ease-in-out;
+}
+
+.collaborative-field.syncing {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Active user indicators */
+.active-user-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.active-user-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
