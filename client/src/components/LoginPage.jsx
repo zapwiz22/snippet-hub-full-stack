@@ -52,14 +52,17 @@ const LoginPage = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include'
-      });
+      const response = await fetch(
+        "https://snippet-hub-full-stack.onrender.com//api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+          credentials: "include",
+        }
+      );
 
       const data = await response.json();
 
@@ -90,8 +93,8 @@ const LoginPage = () => {
           <p className="text-gray-600">
             Sign in to your{" "}
             <span className="font-bold">
-              <span className="text-purple-500">&lt;</span>{" "}
-              SnippetHub <span className="text-purple-500">/&gt;</span>
+              <span className="text-purple-500">&lt;</span> SnippetHub{" "}
+              <span className="text-purple-500">/&gt;</span>
             </span>{" "}
             account
           </p>

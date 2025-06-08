@@ -61,7 +61,7 @@ const Add = () => {
       };
 
       const response = await fetch(
-        `http://localhost:3000/api/snippet/add/${userId}`,
+        `https://snippet-hub-full-stack.onrender.com//api/snippet/add/${userId}`,
         {
           method: "POST",
           headers: {
@@ -76,7 +76,7 @@ const Add = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // if file upload save file to indexedDB 
+        // if file upload save file to indexedDB
         if (file && contentType === "file") {
           await saveFile(data.snippet._id, file);
         }

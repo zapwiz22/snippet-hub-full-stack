@@ -83,7 +83,7 @@ export const useCollaborativeEdit = (
     );
 
     // Initialize socket connection
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io("https://snippet-hub-full-stack.onrender.com/", {
       withCredentials: true,
     });
 
@@ -265,7 +265,7 @@ export const useCollaborativeEdit = (
     isConnected,
     activeUsers,
     remoteChanges,
-    isSyncing: isSyncing && (!isLocallyEditing || !context.isCollectionContext), 
+    isSyncing: isSyncing && (!isLocallyEditing || !context.isCollectionContext),
     isLocallyEditing,
     sendContentChange,
     sendCursorPosition,

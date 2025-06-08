@@ -39,7 +39,7 @@ const AllCards = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/snippet/get/${authData.userId}`,
+          `https://snippet-hub-full-stack.onrender.com//api/snippet/get/${authData.userId}`,
           {
             method: "GET",
             headers: {
@@ -99,7 +99,7 @@ const AllCards = () => {
           position: index,
         }));
         const response = await fetch(
-          `http://localhost:3000/api/snippet/reorder/${userId}`,
+          `https://snippet-hub-full-stack.onrender.com//api/snippet/reorder/${userId}`,
           {
             method: "PUT",
             headers: {
@@ -191,7 +191,9 @@ const AllCards = () => {
           </h3>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
             Your personal snippet manager is ready. Start by creating your first
-            snippet by clicking on the <span className="font-bold text-purple-500">Add</span> button in the sidebar!
+            snippet by clicking on the{" "}
+            <span className="font-bold text-purple-500">Add</span> button in the
+            sidebar!
           </p>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 max-w-3xl mx-auto">
             <h4 className="text-lg font-semibold text-purple-800 mb-4">

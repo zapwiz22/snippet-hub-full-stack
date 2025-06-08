@@ -32,7 +32,7 @@ export const useSnippets = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/snippet/get/${authData.userId}`,
+        `https://snippet-hub-full-stack.onrender.com//api/snippet/get/${authData.userId}`,
         {
           method: "GET",
           headers: {

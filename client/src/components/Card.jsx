@@ -8,15 +8,7 @@ const ItemTypes = {
   CARD: "card",
 };
 
-const Card = ({
-  id,
-  title,
-  description,
-  tags,
-  starred,
-  index,
-  moveCard,
-}) => {
+const Card = ({ id, title, description, tags, starred, index, moveCard }) => {
   const navigate = useNavigate();
   const [snippets, setSnippets] = useRecoilState(snippetsAtom);
   const ref = useRef(null);
@@ -80,7 +72,7 @@ const Card = ({
         return;
       }
       const response = await fetch(
-        `http://localhost:3000/api/snippet/delete/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com//api/snippet/delete/${userId}/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -112,7 +104,7 @@ const Card = ({
         return;
       }
       const response = await fetch(
-        `http://localhost:3000/api/snippet/starred/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com//api/snippet/starred/${userId}/${id}`,
         {
           method: "PUT",
           headers: {

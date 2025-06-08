@@ -14,7 +14,7 @@ export const useWebSocket = (
     if (!collectionId) return;
 
     // Initialize socket connection
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io("https://snippet-hub-full-stack.onrender.com/", {
       withCredentials: true,
     });
 

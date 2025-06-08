@@ -34,7 +34,7 @@ const Collections = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/collection/get/${authData.userId}`,
+          `https://snippet-hub-full-stack.onrender.com//api/collection/get/${authData.userId}`,
           {
             method: "GET",
             headers: {
@@ -74,18 +74,21 @@ const Collections = () => {
 
     try {
       console.log(authData.userId);
-      const response = await fetch(`http://localhost:3000/api/collection/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authData.token}`,
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          name: newCollectionName,
-          description: newCollectionDescription,
-        }),
-      });
+      const response = await fetch(
+        `https://snippet-hub-full-stack.onrender.com//api/collection/add`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authData.token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            name: newCollectionName,
+            description: newCollectionDescription,
+          }),
+        }
+      );
 
       const data = await response.json();
 

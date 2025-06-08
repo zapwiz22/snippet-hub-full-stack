@@ -91,7 +91,7 @@ const CollectionDetail = () => {
         console.log(`Fetching collection ${id}`);
 
         const response = await fetch(
-          `http://localhost:3000/api/collection/snippets/${id}`,
+          `https://snippet-hub-full-stack.onrender.com//api/collection/snippets/${id}`,
           {
             method: "GET",
             headers: {
@@ -169,7 +169,7 @@ const CollectionDetail = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/collection/edit/${id}`,
+        `https://snippet-hub-full-stack.onrender.com//api/collection/edit/${id}`,
         {
           method: "PUT",
           headers: {
@@ -240,7 +240,7 @@ const CollectionDetail = () => {
 
       // Use the new collection-specific endpoint
       const response = await fetch(
-        `http://localhost:3000/api/snippet/add-to-collection/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com//api/snippet/add-to-collection/${userId}/${id}`,
         {
           method: "POST",
           headers: {

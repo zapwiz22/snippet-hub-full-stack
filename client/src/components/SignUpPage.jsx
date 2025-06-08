@@ -66,19 +66,22 @@ const SignUpPage = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-        }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://snippet-hub-full-stack.onrender.com//api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+          }),
+          credentials: "include",
+        }
+      );
 
       const data = await response.json();
 
