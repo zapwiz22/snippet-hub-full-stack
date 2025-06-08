@@ -61,7 +61,7 @@ const Add = () => {
       };
 
       const response = await fetch(
-        `https://snippet-hub-full-stack.onrender.com//api/snippet/add/${userId}`,
+        `https://snippet-hub-full-stack.onrender.com/api/snippet/add/${userId}`,
         {
           method: "POST",
           headers: {

@@ -35,7 +35,7 @@ const Starred = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://snippet-hub-full-stack.onrender.com//api/snippet/get/${authData.userId}`,
+          `https://snippet-hub-full-stack.onrender.com/api/snippet/get/${authData.userId}`,
           {
             method: "GET",
             headers: {
@@ -99,7 +99,7 @@ const Starred = () => {
           position: index,
         }));
         const response = await fetch(
-          `https://snippet-hub-full-stack.onrender.com//api/snippet/reorder/${userId}`,
+          `https://snippet-hub-full-stack.onrender.com/api/snippet/reorder/${userId}`,
           {
             method: "PUT",
             headers: {

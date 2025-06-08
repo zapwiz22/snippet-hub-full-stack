@@ -83,7 +83,7 @@ export const useCollaborativeEdit = (
     );
 
     // Initialize socket connection
-    socketRef.current = io("https://snippet-hub-full-stack.onrender.com/", {
+    socketRef.current = io("https://snippet-hub-full-stack.onrender.com", {
       withCredentials: true,
     });
 

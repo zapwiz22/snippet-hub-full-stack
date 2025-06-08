@@ -67,7 +67,7 @@ const SignUpPage = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "https://snippet-hub-full-stack.onrender.com//api/auth/signup",
+        "https://snippet-hub-full-stack.onrender.com/api/auth/signup",
         {
           method: "POST",
           headers: {

@@ -21,7 +21,7 @@ const PublicShareSnippet = () => {
 
       try {
         const response = await fetch(
-          `https://snippet-hub-full-stack.onrender.com//api/snippet/public/${userId}/${snippetId}`,
+          `https://snippet-hub-full-stack.onrender.com/api/snippet/public/${userId}/${snippetId}`,
           {
             method: "GET",
             headers: {

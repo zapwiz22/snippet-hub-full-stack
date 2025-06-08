@@ -230,7 +230,7 @@ const EditSnippet = () => {
     try {
       const { userId } = authData;
       const response = await fetch(
-        `https://snippet-hub-full-stack.onrender.com//api/snippet/edit/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com/api/snippet/edit/${userId}/${id}`,
         {
           method: "PUT",
           headers: {

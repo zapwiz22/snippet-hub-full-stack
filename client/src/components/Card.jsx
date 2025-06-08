@@ -72,7 +72,7 @@ const Card = ({ id, title, description, tags, starred, index, moveCard }) => {
         return;
       }
       const response = await fetch(
-        `https://snippet-hub-full-stack.onrender.com//api/snippet/delete/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com/api/snippet/delete/${userId}/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -104,7 +104,7 @@ const Card = ({ id, title, description, tags, starred, index, moveCard }) => {
         return;
       }
       const response = await fetch(
-        `https://snippet-hub-full-stack.onrender.com//api/snippet/starred/${userId}/${id}`,
+        `https://snippet-hub-full-stack.onrender.com/api/snippet/starred/${userId}/${id}`,
         {
           method: "PUT",
           headers: {

@@ -36,7 +36,7 @@ const Taglist = ({ toggleSidebar }) => {
 
       try {
         const response = await fetch(
-          `https://snippet-hub-full-stack.onrender.com//api/snippet/get/${authData.userId}`,
+          `https://snippet-hub-full-stack.onrender.com/api/snippet/get/${authData.userId}`,
           {
             method: "GET",
             headers: {

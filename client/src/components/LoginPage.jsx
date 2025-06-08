@@ -53,7 +53,7 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "https://snippet-hub-full-stack.onrender.com//api/auth/login",
+        "https://snippet-hub-full-stack.onrender.com/api/auth/login",
         {
           method: "POST",
           headers: {
