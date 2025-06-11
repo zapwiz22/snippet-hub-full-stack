@@ -1,4 +1,4 @@
-import { redisClient } from "../db/redis";
+import { redisClient } from "../db/redis.js";
 
 // cache function for all snippets
 export async function cacheAllSnippets(req, res, next) {
