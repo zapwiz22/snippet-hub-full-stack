@@ -1,3 +1,4 @@
+import { redisClient } from "../db/redis.js";
 import Collection from "../models/collection.model.js";
 
 // add a new collection
@@ -65,7 +66,13 @@ export const getCollections = async (req, res) => {
       ...collection.toObject(),
       collaborators: collection.users, // Rename users to collaborators for frontend
     }));
-
+    await redisClient.set(
+      `collections:${userId}`,
+      JSON.stringify(transformedCollections),
+      {
+        EX: 3600,
+      }
+    );
     res.status(200).json(transformedCollections);
   } catch (error) {
     res
@@ -128,7 +135,13 @@ export const getSnippetsInCollection = async (req, res) => {
       createdAt: collection.createdAt,
       updatedAt: collection.updatedAt,
     };
-
+    await redisClient.set(
+      `snippetsInCollection:${collectionId}`,
+      JSON.stringify(responseData),
+      {
+        EX: 3600,
+      }
+    );
     res.status(200).json(responseData);
   } catch (error) {
     console.error("Error fetching collection snippets:", error);

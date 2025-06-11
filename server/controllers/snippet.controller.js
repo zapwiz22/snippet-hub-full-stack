@@ -1,5 +1,6 @@
 import Snippet from "../models/snippet.model.js";
 import Collection from "../models/collection.model.js";
+import { redisClient } from "../db/redis.js";
 
 // Helper function to check if user has access to modify a snippet
 const canUserModifySnippet = async (snippetId, userId) => {
@@ -177,7 +178,9 @@ export const getSnippets = async (req, res) => {
       position: 1,
       createdAt: 1,
     });
-
+    await redisClient.set(`snippets:${userId}`,JSON.stringify(snippets),{
+      EX: 3600,
+    });
     res
       .status(200)
       .json({ message: "Snippets fetched successfully!", snippets });

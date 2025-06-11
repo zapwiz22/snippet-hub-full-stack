@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import snippetRoutes from "./routes/snippet.routes.js";
 import collectionRoutes from "./routes/collection.routes.js";
 import User from "./models/user.model.js";
+import { connectRedis } from "./db/redis.js";
 
 dotenv.config();
 
@@ -276,5 +277,6 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   connectToMongoDB();
+  connectRedis();
   console.log(`Server Running on port ${PORT}`);
 });
